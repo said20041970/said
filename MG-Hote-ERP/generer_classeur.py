@@ -614,7 +614,7 @@ kpi_tile(ws, 5, 10, "NUITS RÉSERVÉES (MOIS)", '=SUMIFS(T_Reservations[Nuits],T
 
 section(ws, 9, "Bloc Financier (mois en cours)", col_span=16)
 fin_rows = [
-    ("Chiffre d'affaires du mois", '=SUMIFS(T_Finances[Revenu locatif],T_Finances[Mois],TEXT(TODAY(),"yyyy-mm"))', "#,##0 MAD"),
+    ("Chiffre d'affaires brut du mois", '=SUMIFS(T_Reservations[Prix total (TTC)],T_Reservations[Mois],TEXT(TODAY(),"yyyy-mm"),T_Reservations[Statut],"<>Annulée")', "#,##0 MAD"),
     ("Charges du mois", '=SUMIFS(T_Finances[Total charges],T_Finances[Mois],TEXT(TODAY(),"yyyy-mm"))', "#,##0 MAD"),
     ("Résultat net du mois", '=SUMIFS(T_Finances[Résultat net propriétaire],T_Finances[Mois],TEXT(TODAY(),"yyyy-mm"))', "#,##0 MAD"),
     ("Impayés en cours (tous biens)", '=SUMIFS(T_Reservations[Solde dû],T_Reservations[Soldé],"Non")', "#,##0 MAD"),
@@ -654,7 +654,9 @@ for i in range(12):
     row = CHART_ROW0 + 1 + i
     mcell = ws.cell(row=row, column=2, value=f"=EOMONTH(TODAY(),-{months_back}-1)+1")
     formula_cell(mcell, number_format="mmm-yy", align="center")
-    ca = ws.cell(row=row, column=3, value=f'=SUMIFS(T_Finances[Revenu locatif],T_Finances[Mois],TEXT(B{row},"yyyy-mm"))')
+    ca = ws.cell(row=row, column=3, value=(
+        f'=SUMIFS(T_Reservations[Prix total (TTC)],T_Reservations[Mois],TEXT(B{row},"yyyy-mm"),T_Reservations[Statut],"<>Annulée")'
+    ))
     formula_cell(ca, number_format="#,##0 MAD", align="right")
     tx = ws.cell(row=row, column=4, value=(
         f'=IFERROR(SUMIFS(T_Reservations[Nuits],T_Reservations[Mois],TEXT(B{row},"yyyy-mm"),T_Reservations[Statut],"<>Annulée")'
@@ -735,7 +737,7 @@ formula_cell(ws.cell(row=12, column=3, value='=IFERROR(INDEX(Propriétaires!$G:$
 section(ws, 14, "Détail financier du mois", col_span=7)
 header_row(ws, 16, ["Poste", "Montant"], start_col=2)
 inv_rows = [
-    ("Revenu locatif encaissé", '=SUMIFS(T_Finances[Revenu locatif],T_Finances[Bien],$C$6,T_Finances[Mois],$F$6)'),
+    ("Revenu locatif brut", '=SUMIFS(T_Reservations[Prix total (TTC)],T_Reservations[Bien],$C$6,T_Reservations[Mois],$F$6,T_Reservations[Statut],"<>Annulée")'),
     ("Ménage", '=-SUMIFS(T_Finances[Ménage],T_Finances[Bien],$C$6,T_Finances[Mois],$F$6)'),
     ("Consommables", '=-SUMIFS(T_Finances[Consommables],T_Finances[Bien],$C$6,T_Finances[Mois],$F$6)'),
     ("Électricité", '=-SUMIFS(T_Finances[Électricité],T_Finances[Bien],$C$6,T_Finances[Mois],$F$6)'),
@@ -792,7 +794,7 @@ formula_cell(ws.cell(row=4, column=6, value="=TODAY()"), number_format="dd/mm/yy
 
 section(ws, 6, "Synthèse financière", col_span=7)
 fin_rows = [
-    ("Chiffre d'affaires total", '=SUMIFS(T_Finances[Revenu locatif],T_Finances[Mois],$C$4)', "#,##0 MAD"),
+    ("Chiffre d'affaires brut total", '=SUMIFS(T_Reservations[Prix total (TTC)],T_Reservations[Mois],$C$4,T_Reservations[Statut],"<>Annulée")', "#,##0 MAD"),
     ("Charges totales", '=SUMIFS(T_Finances[Total charges],T_Finances[Mois],$C$4)', "#,##0 MAD"),
     ("Commission MG Hôte totale", '=SUMIFS(T_Finances[Commission MG Hôte],T_Finances[Mois],$C$4)', "#,##0 MAD"),
     ("Résultat net global (propriétaires)", '=SUMIFS(T_Finances[Résultat net propriétaire],T_Finances[Mois],$C$4)', "#,##0 MAD"),
