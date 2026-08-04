@@ -575,6 +575,15 @@ for col in (2, 6, 10, 14):
     ws.conditional_formatting.add(anchor, CellIsRule(operator="greaterThan", formula=["0"], fill=PatternFill("solid", fgColor=RED_ALERT), font=Font(name=FONT_NAME, size=18, bold=True, color=RED_TEXT)))
     ws.conditional_formatting.add(anchor, CellIsRule(operator="equal", formula=["0"], fill=PatternFill("solid", fgColor=GREEN_OK), font=Font(name=FONT_NAME, size=18, bold=True, color=GREEN_TEXT)))
 
+note_alert = ws.cell(row=8, column=2, value=(
+    "Rentabilité faible : ce compteur ne peut évaluer que les mois déjà saisis dans l'onglet Finances — "
+    "0 signifie « aucun mois saisi n'est en dessous du seuil », pas forcément « tout va bien » si vous n'avez "
+    "pas encore renseigné le mois en cours."
+))
+ws.merge_cells(start_row=8, start_column=2, end_row=8, end_column=16)
+note_alert.font = Font(name=FONT_NAME, size=8, italic=True, color="808080")
+note_alert.alignment = Alignment(wrap_text=True, vertical="top")
+
 section(ws, 11, "Détail — Logements vides depuis trop longtemps (vs seuil défini dans Paramètres)", col_span=16)
 header_row(ws, 13, ["Bien", "Dernier départ", "Jours sans réservation", "Alerte"], start_col=2)
 for i in range(10):
@@ -614,11 +623,11 @@ kpi_tile(ws, 5, 10, "NUITS RÉSERVÉES (MOIS)", '=SUMIFS(T_Reservations[Nuits],T
 
 section(ws, 9, "Bloc Financier (mois en cours)", col_span=16)
 fin_rows = [
-    ("Chiffre d'affaires brut du mois", '=SUMIFS(T_Reservations[Prix total (TTC)],T_Reservations[Mois],TEXT(TODAY(),"yyyy-mm"),T_Reservations[Statut],"<>Annulée")', "#,##0 MAD"),
-    ("Charges du mois", '=SUMIFS(T_Finances[Total charges],T_Finances[Mois],TEXT(TODAY(),"yyyy-mm"))', "#,##0 MAD"),
-    ("Résultat net du mois", '=SUMIFS(T_Finances[Résultat net propriétaire],T_Finances[Mois],TEXT(TODAY(),"yyyy-mm"))', "#,##0 MAD"),
-    ("Impayés en cours (tous biens)", '=SUMIFS(T_Reservations[Solde dû],T_Reservations[Soldé],"Non")', "#,##0 MAD"),
-    ("Résultat net cumulé (année)", '=SUMIFS(T_Finances[Résultat net propriétaire],T_Finances[Mois],TEXT(TODAY(),"yyyy")&"*")', "#,##0 MAD"),
+    ("Chiffre d'affaires brut du mois", '=SUMIFS(T_Reservations[Prix total (TTC)],T_Reservations[Mois],TEXT(TODAY(),"yyyy-mm"),T_Reservations[Statut],"<>Annulée")', "#,##0 MAD;(#,##0) MAD"),
+    ("Charges du mois (saisies dans Finances)", '=SUMIFS(T_Finances[Total charges],T_Finances[Mois],TEXT(TODAY(),"yyyy-mm"))', "#,##0 MAD;(#,##0) MAD"),
+    ("Résultat net du mois (selon Finances)", '=SUMIFS(T_Finances[Résultat net propriétaire],T_Finances[Mois],TEXT(TODAY(),"yyyy-mm"))', "#,##0 MAD;(#,##0) MAD"),
+    ("Impayés en cours (tous biens)", '=SUMIFS(T_Reservations[Solde dû],T_Reservations[Soldé],"Non")', "#,##0 MAD;(#,##0) MAD"),
+    ("Résultat net cumulé (année, selon Finances)", '=SUMIFS(T_Finances[Résultat net propriétaire],T_Finances[Mois],TEXT(TODAY(),"yyyy")&"*")', "#,##0 MAD;(#,##0) MAD"),
 ]
 row = 11
 for label, formula, fmt in fin_rows:
@@ -631,6 +640,13 @@ for label, formula, fmt in fin_rows:
     fc = ws.cell(row=row, column=7, value=formula)
     formula_cell(fc, number_format=fmt, align="right", bold=True)
     row += 1
+note_fin = ws.cell(row=row, column=2, value=(
+    "Charges, résultat net et cumul annuel reflètent uniquement les mois déjà saisis dans l'onglet Finances "
+    "(le chiffre d'affaires brut, lui, est toujours en temps réel depuis les réservations)."
+))
+ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=16)
+note_fin.font = Font(name=FONT_NAME, size=8, italic=True, color="808080")
+note_fin.alignment = Alignment(wrap_text=True, vertical="top")
 
 section(ws, 17, "Bloc Opérationnel — Alertes", col_span=16)
 kpi_tile(ws, 19, 2, "PAIEMENTS EN RETARD", "='Alertes'!B6", "0")
@@ -648,7 +664,7 @@ ws.merge_cells(start_row=25, start_column=2, end_row=40, end_column=16)  # zone 
 # --- zone de données du graphique (12 derniers mois) ---
 CHART_ROW0 = 45
 section(ws, CHART_ROW0 - 1, "Données du graphique — ne pas supprimer (12 derniers mois)", col_span=16)
-header_row(ws, CHART_ROW0, ["Mois", "Chiffre d'affaires", "Taux d'occupation"], start_col=2)
+header_row(ws, CHART_ROW0, ["Mois", "Chiffre d'affaires brut", "Taux d'occupation"], start_col=2)
 for i in range(12):
     months_back = 11 - i
     row = CHART_ROW0 + 1 + i
@@ -673,7 +689,7 @@ note.font = Font(name=FONT_NAME, size=9, italic=True, color=BLACK)
 note.alignment = Alignment(wrap_text=True, vertical="top")
 
 chart1 = LineChart()
-chart1.title = "Évolution du chiffre d'affaires"
+chart1.title = "Évolution du chiffre d'affaires brut"
 chart1.style = 2
 chart1.y_axis.title = "CA (MAD)"
 chart1.x_axis.title = "Mois"
